@@ -1,0 +1,36 @@
+name: Check and package
+description: Validate Lua, export regressions and release packaging
+inputs:
+  tag:
+    description: Optional release tag matching the TOC
+    required: false
+    default: ''
+outputs:
+  version:
+    value: ${{ steps.build.outputs.version }}
+  archive:
+    value: ${{ steps.build.outputs.archive }}
+  checksum:
+    value: ${{ steps.build.outputs.checksum }}
+  notes:
+    value: ${{ steps.build.outputs.notes }}
+runs:
+  using: composite
+  steps:
+    - name: Install Lua 5.1
+      shell: bash
+      run: sudo apt-get update -qq && sudo apt-get install -y lua5.1
+    - name: Test addon and tools
+      shell: bash
+      run: |
+        LUA=lua5.1 LUAC=luac5.1 bash tests/run_tests.sh
+        python3 -m unittest discover -s tests -p 'test_*.py'
+    - name: Package
+      id: build
+      shell: bash
+      env:
+        RELEASE_TAG: ${{ inputs.tag }}
+      run: |
+        flags=()
+        if [[ -n "$RELEASE_TAG" ]]; then flags+=(--tag "$RELEASE_TAG"); fi
+        python3 tools/build_package.py --output-dir dist --github-output "$GITHUB_OUTPUT" "${flags[@]}"
