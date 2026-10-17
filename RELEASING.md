@@ -10,7 +10,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 python3 tools/build_package.py --output-dir dist --tag v1.7.0
 ```
 
-Das ZIP hat unabhängig vom Checkout-Namen genau einen obersten Ordner `GabbaGuildCraft`. Nur ausdrücklich freigegebene Laufzeit- und Dokumentationsdateien werden verpackt. Tests, Buildskripte, Git-Dateien und große Artwork-Quelldateien bleiben draußen. Gleicher Quellstand ergibt denselben SHA-256-Hash.
+Das ZIP hat unabhängig vom Checkout-Namen genau einen obersten Ordner `GabbaGuildCraft`. Nur ausdrücklich freigegebene Laufzeit- und Dokumentationsdateien werden verpackt. Tests, Buildskripte, Git-Dateien und große Artwork-Quelldateien bleiben draußen. Gleicher Quellstand mit derselben Python-/zlib-Version ergibt denselben SHA-256-Hash. Andere zlib-Versionen können identische Inhalte unterschiedlich komprimieren. Für Website und Mirrors wird deshalb die fertige ZIP-Datei aus dem GitHub-Release unverändert übernommen.
 
 ## Veröffentlichen
 
