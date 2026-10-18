@@ -13,13 +13,15 @@ GabbaGuildCraft liest deine **gelernten Berufsrezepte** in WoW Classic ein und m
 - Discord-Text in passenden Nachrichtenlängen kopieren, auf Wunsch mit Wowhead-Links.
 - Einen HTML-Export in WoWs SavedVariables vorbereiten und in GabbaCraft hochladen.
 - Über das eigene **Minimap-Symbol** das Fenster öffnen und schließen; per Ziehen verschieben.
-- Mit **„Neu laden“** den gespeicherten Export auf die Festplatte schreiben.
+- Mit **„Jetzt /reload“** den gespeicherten Export auf die Festplatte schreiben.
 
 Keine zusätzlichen Addon-Bibliotheken nötig. Das Addon selbst verbindet sich weder mit Discord noch mit einem Webserver. Die deutsche Spieloberfläche funktioniert auch mit englischen Rezeptdaten; die Website bietet Deutsch und Englisch.
 
+Die Oberfläche und Exporttexte folgen der WoW-Sprache: Deutsch bei deDE, sonst Englisch. Der gespeicherte Haken **„Materialien & Transmutationen anzeigen“** ist standardmäßig aktiv und berücksichtigt auch Öle, Treibstoffe und Transmutationen.
+
 ## Installation
 
-1. Lade **GabbaGuildCraft-1.7.0.zip** unter [Releases](https://github.com/Gabbajoe/GabbaGuildCraft/releases/latest) herunter. Verwende das fertige Addon-ZIP, nicht GitHubs „Source code“.
+1. Lade **GabbaGuildCraft-1.8.1.zip** unter [Releases](https://github.com/Gabbajoe/GabbaGuildCraft/releases/latest) herunter. Verwende das fertige Addon-ZIP, nicht GitHubs „Source code“.
 2. Beende WoW und entpacke die ZIP-Datei.
 3. Kopiere den enthaltenen Ordner **GabbaGuildCraft** in `Interface/AddOns` deiner Spielinstallation. Für Classic Era zum Beispiel:
 
@@ -31,14 +33,14 @@ Keine zusätzlichen Addon-Bibliotheken nötig. Das Addon selbst verbindet sich w
 4. Prüfe, dass `GabbaGuildCraft.toc` **direkt** in diesem Ordner liegt – keine doppelte GabbaGuildCraft-Ordnerebene.
 5. Starte WoW neu und aktiviere GabbaGuildCraft in der Addon-Liste der Charakterauswahl.
 
-Die TOC nennt **Classic Era 1.15.9** und **Burning Crusade Classic 2.5.6**. Retail wird nicht unterstützt. Die neuen Bedienelemente sind automatisiert mit nachgebildeten WoW-APIs geprüft; ein Spieltest dieser Version steht noch aus.
+Unterstützt wird **WoW Classic Hardcore** mit dem **Classic-Era-Client 1.15.9**. Burning Crusade Classic und Retail werden nicht unterstützt. Die neuen Bedienelemente sind automatisiert mit nachgebildeten WoW-APIs geprüft; ein Spieltest dieser Version steht noch aus.
 
 ## Rezepte veröffentlichen
 
 1. Öffne deinen Beruf und setze die Filter im Berufsfenster zurück.
 2. Klicke auf das Hammer-Buch-Symbol an der Minimap oder gib `/ggc` ein.
 3. Klicke **„Rezepte einlesen“** und prüfe Suche und Filter.
-4. Klicke **„HTML speichern“** und anschließend **„Neu laden“**. Der zweite Button wird erst nach erfolgreichem Speichern aktiv. Änderungen an Suche oder Filtern erfordern erneutes Speichern. Im Kampf wartet der Button auf das Kampfende.
+4. Klicke **„Export speichern“** und anschließend **„Jetzt /reload“**. Der zweite Button wird erst nach erfolgreichem Speichern aktiv. Änderungen an Suche oder Filtern erfordern erneutes Speichern. Im Kampf wartet der Button auf das Kampfende.
 5. Öffne [GabbaCraft](https://kellerkind.info/gabbacraft/), melde dich mit Discord an und lade unter **„Meine Werkstatt“** diese Datei hoch:
 
    ```text
@@ -59,8 +61,8 @@ Die TOC nennt **Classic Era 1.15.9** und **Burning Crusade Classic 2.5.6**. Reta
 | Addon fehlt in der Liste | ZIP entpacken, Ordnerstruktur und Spielversion prüfen, WoW vollständig neu starten. |
 | Rezepte fehlen | Beruf öffnen, dessen Filter zurücksetzen, im Addon Suche und Relevanzfilter prüfen. |
 | Itemdaten noch nicht geladen | Kurz warten und erneut „Rezepte einlesen“ klicken. |
-| Exportdatei fehlt oder ist alt | Erst „HTML speichern“, dann „Neu laden“; den richtigen Account unter SavedVariables wählen. |
-| Neu laden ist ausgegraut | Zuerst einen gültigen Export mit „HTML speichern“ vorbereiten. |
+| Exportdatei fehlt oder ist alt | Erst „Export speichern“, dann „Jetzt /reload“; den richtigen Account unter SavedVariables wählen. |
+| Jetzt /reload ist ausgegraut | Zuerst einen gültigen Export mit „Export speichern“ vorbereiten. |
 | Kein Zugriff auf die Werkstatt | Discord-Konto und Rolle „Crafter“ auf Saftladen prüfen. |
 
 Beim Umstieg vom alten GuildTailor das Spiel beenden und den alten Addon-Ordner entfernen. Vorhandene Exportvariablen bleiben kompatibel. Nicht mehrere Versionen gleichzeitig installieren.
@@ -70,7 +72,7 @@ Beim Umstieg vom alten GuildTailor das Spiel beenden und den alten Addon-Ordner 
 ```sh
 LUA=lua5.1 LUAC=luac5.1 bash tests/run_tests.sh
 python3 -m unittest discover -s tests -p 'test_*.py'
-python3 tools/build_package.py --output-dir dist --tag v1.7.0
+python3 tools/build_package.py --output-dir dist --tag v1.8.1
 ```
 
 Die Pipeline prüft Lua und Exportverhalten und baut ein reproduzierbares ZIP mit SHA-256-Prüfsumme. Ein Versions-Tag erzeugt einen GitHub-Release; ein eingerichtetes CurseForge-Projekt erhält dasselbe Paket. Einrichtung und Veröffentlichung: **[RELEASING.md](RELEASING.md)**. Projektbeschreibung und Logo: **[curseforge/SETUP.md](curseforge/SETUP.md)**.
@@ -80,3 +82,5 @@ Dies ist ausschließlich das Addon-Repository. Website, Discord-Bot, Companion-A
 ## Lizenz & Artwork
 
 [MIT](LICENSE). Das eigene Hammer-und-Rezeptbuch-Motiv wurde mit KI-Unterstützung erstellt; [Motiv und Prompt](docs/artwork/PROMPT.md). World of Warcraft ist eine Marke von Blizzard Entertainment. Dieses Community-Projekt ist nicht mit Blizzard verbunden.
+
+Fehlende Daten lädt das Addon bis zu 20 Sekunden nach. Bleiben Lücken, zeigt es Rezeptnamen und fehlende Angaben an. Export und Textkopie bleiben gesperrt, bis die ausgewählten Rezepte vollständig sind; der letzte gespeicherte Export bleibt erhalten. Danach erneut einlesen oder die betroffenen Rezepte gezielt herausfiltern.

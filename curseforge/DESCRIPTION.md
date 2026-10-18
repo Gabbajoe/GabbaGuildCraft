@@ -27,4 +27,4 @@ Lies deine gelernten Berufsrezepte mit Zutaten und Effekten ein und teile sie mi
 
 [Ausführliche Anleitung](https://github.com/Gabbajoe/GabbaGuildCraft#installation) · [Source & issues](https://github.com/Gabbajoe/GabbaGuildCraft)
 
-Classic Era and Burning Crusade Classic; not Retail. See release notes for validation status. Independent community project, not affiliated with Blizzard Entertainment.
+WoW Classic Hardcore (Classic Era client). Burning Crusade Classic and Retail are not supported. See release notes for validation status. Independent community project, not affiliated with Blizzard Entertainment.

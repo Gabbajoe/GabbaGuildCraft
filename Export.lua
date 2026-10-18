@@ -1,4 +1,5 @@
 local _, GT = ...
+local L = GT.L
 
 function GT.Clean(value)
     local text = tostring(value or "")
@@ -9,7 +10,7 @@ function GT.Clean(value)
 end
 
 local function level(value)
-    if value == nil then return "noch nicht geladen" end
+    if value == nil then return L("noch nicht geladen") end
     return value == 0 and "–" or tostring(value)
 end
 
@@ -27,20 +28,21 @@ function GT.FormatRecipe(recipe, links, prefix)
     end
     local materials = {}
     for _, reagent in ipairs(recipe.reagents) do
-        materials[#materials + 1] = (reagent.count or "?") .. "× " .. GT.Clean(reagent.name or "Zutat noch nicht geladen")
+        materials[#materials + 1] = (reagent.count or "?") .. "× " .. GT.Clean(reagent.name or L("Zutat noch nicht geladen"))
     end
     local details = {}
     for _, effect in ipairs(recipe.effects or {}) do details[#details + 1] = GT.Clean(effect) end
-    local levelText = recipe.isEnchant and "Verzauberung · Anforderungen siehe Effekt\n"
-        or ("Itemlevel: " .. level(recipe.itemLevel) .. " · Benötigtes Level: " .. level(recipe.requiredLevel) .. "\n")
+    local levelText = recipe.isEnchant and L("Verzauberung · Anforderungen siehe Effekt\n")
+        or (L("Itemlevel: ") .. level(recipe.itemLevel) .. L(" · Benötigtes Level: ") .. level(recipe.requiredLevel) .. "\n")
     return "**" .. name .. "**\n" .. levelText
-        .. "Werte & Effekte: " .. (#details > 0 and table.concat(details, "; ")
-            or (recipe.effectsLoaded and "keine weiteren Angaben" or "noch nicht geladen – erneut einlesen")) .. "\n"
-        .. "Zutaten: " .. (#materials > 0 and table.concat(materials, ", ") or "keine Angabe") .. "\n"
-        .. (recipe.isEnchant and "Ergebnis: 1 Verzauberung" or ("Ergebnis: " .. yieldText .. " pro Herstellung"))
+        .. L("Werte & Effekte: ") .. (#details > 0 and table.concat(details, "; ")
+            or (recipe.effectsLoaded and L("keine weiteren Angaben") or L("noch nicht geladen – erneut einlesen"))) .. "\n"
+        .. L("Zutaten: ") .. (#materials > 0 and table.concat(materials, ", ") or L("keine Angabe")) .. "\n"
+        .. (recipe.isEnchant and L("Ergebnis: 1 Verzauberung") or (L("Ergebnis: ") .. yieldText .. L(" pro Herstellung")))
 end
 
-function GT.IsRelevant(recipe, minimumLevel)
+function GT.IsRelevant(recipe, minimumLevel, includeMaterials)
+    if recipe.classID == 7 and includeMaterials then return true end
     if recipe.isEnchant then return true end
     -- Bag equip location also covers specialty bags, regardless of quality/level.
     if recipe.classID == 1 or recipe.equipLoc == "INVTYPE_BAG" then return true end
@@ -66,7 +68,7 @@ function GT.SelectRecipes(recipes, options)
     for _, recipe in ipairs(recipes) do
         if (recipe.name .. " " .. (recipe.itemName or "")):lower():find(query, 1, true) then
             local relevant = true
-            if options.relevantOnly then relevant = GT.IsRelevant(recipe, options.minimumLevel) end
+            if options.relevantOnly then relevant = GT.IsRelevant(recipe, options.minimumLevel, options.includeMaterials) end
             if relevant then selected[#selected + 1] = recipe
             elseif relevant == nil then pending = pending + 1 end
         end
@@ -77,8 +79,8 @@ end
 function GT.BuildPages(recipes, options)
     local selected, pending = GT.SelectRecipes(recipes, options)
     if #selected == 0 then return {}, 0, pending end
-    local title = "## ⚒ " .. GT.Clean(options.profession or recipes.profession or "Berufe") .. " · " .. GT.Clean(options.player) .. "\n"
-        .. "Gelernte Rezepte für die Gilde · Zutaten je Herstellung\n\n"
+    local title = "## ⚒ " .. GT.Clean(options.profession or recipes.profession or L("Berufe")) .. " · " .. GT.Clean(options.player) .. "\n"
+        .. L("Gelernte Rezepte für die Gilde · Zutaten je Herstellung\n\n")
     local pages, body = {}, ""
     -- Byte limit is deliberately stricter than Discord's 2000-character limit.
     local budget = 1900 - #title - 40
@@ -121,7 +123,7 @@ function GT.BuildPages(recipes, options)
     end
     flush()
     for i, content in ipairs(pages) do
-        pages[i] = title .. "**Teil " .. i .. "/" .. #pages .. "**\n\n" .. content
+        pages[i] = title .. L("**Teil ") .. i .. "/" .. #pages .. "**\n\n" .. content
     end
     return pages, #selected, pending
 end

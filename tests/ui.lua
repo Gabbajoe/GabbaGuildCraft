@@ -1,5 +1,7 @@
 -- Behavioral UI tests with explicit WoW frame/API stand-ins; no live client required.
 local frames, named, GT = {}, {}, {}
+GetLocale = function() return "deDE" end
+assert(loadfile("Locale.lua"))("GabbaGuildCraft", GT)
 local methods = {}
 local function widget(name)
     local w = setmetatable({scripts = {}, value = '', shown = true, enabled = true}, {__index = methods})
@@ -52,6 +54,7 @@ ReloadUI = function() reloads = reloads + 1 end
 GT.BuildPages = function() return {'recipe text'}, 1, 0 end
 GT.Scan = function() return {{name = 'Test recipe'}} end
 GT.Enrich = function() return 0 end
+GT.PendingForExport = function() return {} end
 GT.SaveHTML = function(recipes)
     if #recipes == 0 or saveFailure then return nil, 'No recipes to export' end
     saves = saves + 1
@@ -66,9 +69,9 @@ local window = named.GabbaGuildCraftWindow
 assert(window:IsShown())
 GT.ToggleWindow(); assert(not window:IsShown())
 GT.ToggleWindow(); assert(window:IsShown() and #UISpecialFrames == 1)
-local reload, save = byText('Neu laden'), byText('HTML speichern')
+local reload, save = byText('Jetzt /reload'), byText('Export speichern')
 assert(not reload.enabled)
-click(save); assert(not reload.enabled and saves == 0)
+assert(not save.enabled and not reload.enabled and saves == 0)
 click(byText('Rezepte einlesen'))
 click(save); assert(reload.enabled and saves == 1 and GuildTailorHTML == 'saved export')
 combat = true; click(reload); assert(reloads == 0 and reload.enabled)
@@ -102,3 +105,34 @@ assert(loadfile('Minimap.lua'))('GabbaGuildCraft', GT)
 frames[#frames].scripts.OnEvent()
 assert(GabbaGuildCraftDB.minimapAngle == 220)
 print('OK: save/reload, combat guard, filters, window toggle, minimap drag and saved position')
+-- Materials filter persists and invalidates a prepared export.
+window.materials:SetChecked(false)
+window.materials.scripts.OnClick()
+assert(GabbaGuildCraftDB.includeMaterials==false and not reload.enabled)
+window.materials:SetChecked(true)
+window.materials.scripts.OnClick()
+assert(GabbaGuildCraftDB.includeMaterials==true)
+-- Delayed data can recover beyond the previous four-second retry budget.
+local queue, attempts, neverReady = {}, 0, false
+C_Timer={After=function(_,f) queue[#queue+1]=f end}
+GT.Enrich=function() attempts=attempts+1 end
+GT.PendingForExport=function() return (neverReady or attempts<10) and {'Test recipe: reagent'} or {} end
+click(byText('Rezepte einlesen'))
+assert(not save.enabled and not window.copy.enabled)
+for i=1,9 do local f=table.remove(queue,1); assert(f); f() end
+assert(save.enabled and #queue==0)
+click(save); assert(reload.enabled)
+neverReady=true;attempts=0
+click(byText('Rezepte einlesen'))
+while #queue>0 do table.remove(queue,1)() end
+assert(attempts==21 and not save.enabled and not reload.enabled)
+assert(window.output.value:find('Test recipe: reagent',1,true))
+-- A new scan supersedes outstanding retries and a scan failure cannot export old recipes.
+neverReady=false;attempts=0
+click(byText('Rezepte einlesen'))
+local stale=table.remove(queue,1)
+GT.Scan=function() return nil,'Profession closed' end
+click(byText('Rezepte einlesen'))
+stale()
+assert(window.status.value=='Profession closed' and not save.enabled and not reload.enabled)
+print('OK: saved material filter, delayed recovery, timeout diagnostics and superseded scans')

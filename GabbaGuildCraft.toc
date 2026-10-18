@@ -1,13 +1,15 @@
-## Interface: 11509, 20506
+## Interface: 11509
 ## Title: GabbaGuildCraft
-## Notes: Gelernte Berufsrezepte mit Werten und Effekten für Discord.
+## Notes: Share learned profession recipes, reagents and effects with your guild.
+## Notes-deDE: Gelernte Berufsrezepte mit Zutaten, Werten und Effekten für deine Gilde.
 ## Author: Nils
-## Version: 1.7.0
+## Version: 1.8.1
 ## SavedVariables: GabbaGuildCraftDB, GuildTailorHTML, GuildTailorHTMLTailor, GuildTailorHTMLEngineering
 ## Category-deDE: Berufe
 ## IconTexture: Interface\AddOns\GabbaGuildCraft\Assets\Minimap
 ## X-Website: https://github.com/Gabbajoe/GabbaGuildCraft
 
+Locale.lua
 Groups.lua
 Export.lua
 HTML.lua

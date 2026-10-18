@@ -1,4 +1,5 @@
 local _, GT = ...
+local L = GT.L
 local button
 
 local function updatePosition()
@@ -48,8 +49,8 @@ events:SetScript("OnEvent", function()
     button:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:SetText("GabbaGuildCraft")
-        GameTooltip:AddLine("Linksklick: Rezeptfenster öffnen / schließen", 1, 1, 1)
-        GameTooltip:AddLine("Ziehen: Symbol an der Minimap verschieben", 1, 1, 1)
+        GameTooltip:AddLine(L("Linksklick: Rezeptfenster öffnen / schließen"), 1, 1, 1)
+        GameTooltip:AddLine(L("Ziehen: Symbol an der Minimap verschieben"), 1, 1, 1)
         GameTooltip:Show()
     end)
     button:SetScript("OnLeave", function() GameTooltip:Hide() end)

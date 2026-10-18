@@ -1,4 +1,6 @@
 local GT = {}
+GetLocale = function() return "deDE" end
+assert(loadfile("Locale.lua"))("GabbaGuildCraft", GT)
 assert(loadfile("Groups.lua"))("GabbaGuildCraft", GT)
 assert(loadfile("Export.lua"))("GabbaGuildCraft", GT)
 assert(loadfile("HTML.lua"))("GabbaGuildCraft", GT)

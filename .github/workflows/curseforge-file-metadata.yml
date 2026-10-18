@@ -1,0 +1,27 @@
+name: Correct CurseForge file compatibility
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_id:
+        description: Existing CurseForge file ID to correct
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  correct:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set supported game versions from the TOC
+        env:
+          CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          FILE_ID: ${{ inputs.file_id }}
+        run: python3 tools/upload_curseforge.py --update-file "$FILE_ID"

@@ -8,7 +8,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = (
-    'GabbaGuildCraft.toc', 'Groups.lua', 'Export.lua', 'HTML.lua', 'Effects.lua',
+    'GabbaGuildCraft.toc', 'Locale.lua', 'Groups.lua', 'Export.lua', 'HTML.lua', 'Effects.lua',
     'Recipes.lua', 'UI.lua', 'Minimap.lua', 'Assets/Minimap.tga',
     'README.md', 'README.en.md', 'CHANGELOG.md', 'LICENSE',
 )
@@ -23,7 +23,18 @@ def version(root=ROOT):
     return match.group(1)
 
 
+def supported_interfaces(root=ROOT):
+    match = re.search(r'^## Interface: (\d+(?:,\s*\d+)*)$', (root / 'GabbaGuildCraft.toc').read_text(), re.MULTILINE)
+    if not match:
+        raise ValueError('Missing TOC interface')
+    values = [int(value.strip()) for value in match.group(1).split(',')]
+    if len(values) != len(set(values)) or any(value // 10000 != 1 for value in values):
+        raise ValueError('Only the Classic Era client for WoW Classic Hardcore is supported')
+    return values
+
+
 def package_files(root=ROOT):
+    supported_interfaces(root)
     files = list(RUNTIME)
     toc_files = [line.strip() for line in (root / 'GabbaGuildCraft.toc').read_text().splitlines()
                  if line.strip() and not line.lstrip().startswith('#')]

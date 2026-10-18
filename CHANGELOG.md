@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.8.1 — 2026-10-18
+
+- Correct supported clients to WoW Classic Hardcore (Classic Era 1.15.9). Burning Crusade Classic 2.5.6 was listed by mistake and is not supported.
+- Remove the 20506 interface and reject non-Era interfaces during packaging and CurseForge uploads.
+- Includes the 1.8.0 improvements: German/English UI, materials and transmutation filter, automatic retries for missing recipe data, and complete reagent exports.
+- Existing SavedVariables and recipe exports remain unchanged. Automated regression tests pass; an in-game test of the new version is still pending.
+
+## 1.8.0 — 2026-10-18
+
+- German UI and exports on deDE clients; English on other clients. Game-provided names and effects keep the client language.
+- Add the saved “Show materials & transmutations” filter, enabled by default, for oils, crafting materials and transmutation outputs.
+- Retry missing data for up to 20 seconds and list the affected recipes and missing fields. Hidden recipes no longer block the selected export.
+- Disable export/copy while selected recipes are incomplete; retain the last valid saved export.
+- Clarify the “Read recipes → Save export → Reload now” workflow.
+- Validate DE/EN exports, large recipe lists and reagents, delayed loading, timeout handling, filters and packaging with automated tests. Live-client verification remains necessary.
+
 ## 1.7.0 — 2026-10-18
 
 - Add a movable minimap button with an original crafting icon and persistent position.

@@ -15,18 +15,18 @@ C:\Program Files (x86)\World of Warcraft\_classic_era_\Interface\AddOns\GabbaGui
 
 Use Battle.net's folder-opening option to locate your actual installation. On Linux and macOS use the same relative folder structure. Restart WoW and enable the addon on character selection. Do not nest two `GabbaGuildCraft` directories.
 
-The manifest targets Classic Era **1.15.9** and Burning Crusade Classic **2.5.6**, not Retail. Automated Lua tests cover the new controls with simulated WoW APIs; this release still needs an in-game smoke test. The addon's controls are in German; English item data is supported. The website has German and English display options.
+Supported: **WoW Classic Hardcore**, using the **Classic Era 1.15.9** client. Burning Crusade Classic and Retail are not supported. Automated Lua tests cover the new controls with simulated WoW APIs; this release still needs an in-game smoke test. The controls and export labels follow the client language: German for deDE, English otherwise. Item data stays in the game client language. The website has German and English display options.
 
 ## Share recipes
 
 1. Open your profession and clear its filters.
 2. Click the hammer/book minimap icon or type `/ggc` (`/gts` also works).
-3. Click **Rezepte einlesen** (scan recipes); adjust search and relevance filters.
-4. Click **HTML speichern** (save HTML), then **Neu laden** (reload UI). Reload is enabled after a successful save and is blocked during combat. Changing filters requires saving again.
+3. Click **Read recipes**; adjust search and relevance filters.
+4. Click **Save export**, then **Reload now**. Reload is enabled after a successful save and is blocked during combat. Changing filters requires saving again.
 5. Upload `WTF/Account/YOUR_ACCOUNT/SavedVariables/GabbaGuildCraft.lua` to **My workshop** on GabbaCraft. Use the correct account and not the `.bak` file. Uploads on the Saftladen website require its **Crafter** Discord role; reading recipe pages is public.
 6. Share your recipe-page link. Repeat the export to update recipes or publish another profession.
 
-For Discord-only exports, click **Text markieren**, copy with Ctrl+C, and use **Weiter** for additional pages. No login is required for the addon or copying text. The addon makes no network connections and does not upload automatically.
+For Discord-only exports, click **Select text**, copy with Ctrl+C, and use **Next** for additional pages. No login is required for the addon or copying text. The addon makes no network connections and does not upload automatically.
 
 Drag the minimap icon to move it. Position is saved account-wide on reload/logout. Missing recipes usually mean a profession or addon filter is active; missing item data may need another scan after a short wait.
 
@@ -35,3 +35,5 @@ Drag the minimap icon to move it. Position is saved account-wide on reload/logou
 See [release instructions](RELEASING.md), [CurseForge setup](curseforge/SETUP.md) and [changelog](CHANGELOG.md). No external addon libraries required. The repository contains only the addon, not the website or Companion.
 
 [MIT license](LICENSE). Original AI-assisted [artwork](docs/artwork/PROMPT.md). World of Warcraft is a trademark of Blizzard Entertainment; this community project is not affiliated with Blizzard.
+
+The saved **Show materials & transmutations** checkbox defaults to enabled. Disable it to hide crafting materials. Missing data is retried for up to 20 seconds, then listed by recipe and missing field. Export/copy is blocked while selected recipes are incomplete; the last valid export is retained. Read recipes again after a delay or adjust the filters.

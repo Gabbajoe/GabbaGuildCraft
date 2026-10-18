@@ -14,7 +14,7 @@ import urllib.error
 import urllib.request
 import zipfile
 
-from build_package import ROOT, version
+from build_package import ROOT, version, supported_interfaces
 
 API = 'https://wow.curseforge.com/api'
 
@@ -45,14 +45,8 @@ def metadata(root, tag, notes, versions):
     release_version = version(root)
     if tag != 'v' + release_version:
         raise ValueError('Release tag does not match TOC version')
-    interface = re.search(r'^## Interface: (\d+(?:,\s*\d+)*)$', (root / 'GabbaGuildCraft.toc').read_text(), re.MULTILINE)
-    if not interface:
-        raise ValueError('Missing TOC interface')
     game_versions = []
-    for value in interface.group(1).split(','):
-        number = int(value.strip())
-        if number // 10000 not in (1, 2):
-            raise ValueError('Only Classic Era and Burning Crusade interfaces are supported')
+    for number in supported_interfaces(root):
         client_version = f'{number // 10000}.{number // 100 % 100}.{number % 100}'
         matches = [entry for entry in versions if entry.get('name') == client_version]
         if len(matches) != 1 or type(matches[0].get('id')) is not int or matches[0]['id'] <= 0:
@@ -78,6 +72,7 @@ def main():
     parser.add_argument('--archive', type=Path)
     parser.add_argument('--notes', type=Path)
     parser.add_argument('--tag')
+    parser.add_argument('--update-file', type=int, help='Correct only supported game versions on an existing CurseForge file.')
     parser.add_argument('--check', action='store_true', help='Check token and exact client-version lookup without uploading.')
     args = parser.parse_args()
     project = os.environ.get('CURSEFORGE_PROJECT_ID', '')
@@ -86,6 +81,19 @@ def main():
         if not project.isdigit() or int(project) <= 0 or not token:
             raise ValueError('CURSEFORGE_PROJECT_ID and CURSEFORGE_API_TOKEN must be configured')
         release_version = version(ROOT)
+        if args.update_file is not None:
+            if args.update_file <= 0 or args.check or args.archive or args.notes or args.tag:
+                raise ValueError('--update-file requires a positive file ID and cannot be combined with upload/check arguments')
+            data = metadata(ROOT, 'v' + release_version, '', request_json('/game/versions', token))
+            boundary = 'gabba-' + secrets.token_hex(16)
+            body = (f'--{boundary}\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n'
+                    + json.dumps({'fileID': args.update_file, 'gameVersions': data['gameVersions']})
+                    + f'\r\n--{boundary}--\r\n').encode()
+            result = request_json(f'/projects/{project}/update-file', token, body, 'multipart/form-data; boundary=' + boundary)
+            if result.get('id') != args.update_file:
+                raise ValueError('Unexpected file ID in update response; check the dashboard before retrying')
+            print(f"Corrected CurseForge file {args.update_file}: game version IDs {data['gameVersions']}")
+            return
         if args.check:
             data = metadata(ROOT, 'v' + release_version, '', request_json('/game/versions', token))
             print(f'CurseForge author API reachable; project configured as {project}; client version IDs {data["gameVersions"]}. No upload performed.')

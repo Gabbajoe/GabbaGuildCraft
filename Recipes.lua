@@ -1,4 +1,5 @@
 local _, GT = ...
+local L = GT.L
 local getItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
 
 local function itemID(link)
@@ -8,24 +9,43 @@ end
 function GT.Enrich(recipes)
     local pending = 0
     for _, recipe in ipairs(recipes) do
+        recipe.missing = {}
+        local function missing(reason)
+            pending = pending + 1
+            recipe.missing[#recipe.missing + 1] = reason
+        end
         if recipe.itemID then
             local name, _, quality, ilvl, required, _, _, _, equipLoc, _, _, classID, subclassID, _, _, setID = getItemInfo(recipe.link)
             recipe.itemName, recipe.itemLevel, recipe.requiredLevel = name, ilvl, required
             recipe.quality, recipe.equipLoc, recipe.classID = quality, equipLoc, classID
-            recipe.subclassID = subclassID
-            recipe.setID = setID
-            if not name then pending = pending + 1 end
+            recipe.subclassID, recipe.setID = subclassID, setID
+            if not name or not classID or required == nil then missing(L("Gegenstandsdaten")) end
+        elseif not recipe.isEnchant then
+            missing(L("Gegenstandsdaten"))
         end
-        if GT.ReadEffects and not GT.ReadEffects(recipe) then pending = pending + 1 end
-        for _, reagent in ipairs(recipe.reagents) do
-            if reagent.link then
-                local name = getItemInfo(reagent.link)
-                reagent.name = name or reagent.name
+        if GT.ReadEffects and not GT.ReadEffects(recipe) then missing(L("Werte / Tooltip")) end
+        for i, reagent in ipairs(recipe.reagents) do
+            if reagent.link then reagent.name = getItemInfo(reagent.link) or reagent.name end
+            if not reagent.name or not reagent.count then
+                missing(L("Zutat: ") .. (reagent.name or tostring(i)))
             end
-            if not reagent.name then pending = pending + 1 end
         end
     end
     return pending
+end
+
+-- Only recipes matching the export filters should block that export.
+function GT.PendingForExport(recipes, options)
+    local result = {}
+    local query = (options.query or ""):lower()
+    for _, recipe in ipairs(recipes) do
+        local matches = (recipe.name .. " " .. (recipe.itemName or "")):lower():find(query, 1, true)
+        local relevant = not options.relevantOnly or GT.IsRelevant(recipe, options.minimumLevel, options.includeMaterials)
+        if matches and relevant ~= false and recipe.missing and #recipe.missing > 0 then
+            result[#result + 1] = recipe.name .. ": " .. table.concat(recipe.missing, ", ")
+        end
+    end
+    return result
 end
 
 local function spellName(id)
@@ -44,7 +64,7 @@ local function adapter()
     if craftOpen and GetCraftDisplaySkillLine and GetNumCrafts then
         local profession = GetCraftDisplaySkillLine()
         if profession ~= spellName(7411) then
-            return nil, "Bitte einen Herstellungsberuf öffnen (keine Tierausbildung)."
+            return nil, L("Bitte einen Herstellungsberuf öffnen (keine Tierausbildung).")
         end
         return {
             profession = profession, count = GetNumCrafts,
@@ -60,14 +80,14 @@ local function adapter()
         }
     end
     if not GetTradeSkillLine or not GetNumTradeSkills then
-        return nil, "Bitte einen klassischen Herstellungsberuf öffnen."
+        return nil, L("Bitte einen klassischen Herstellungsberuf öffnen.")
     end
     local profession = GetTradeSkillLine()
     if not profession or profession == "UNKNOWN" or profession == UNKNOWN or GetNumTradeSkills() == 0 then
-        return nil, "Bitte zuerst dein eigenes Berufsfenster öffnen."
+        return nil, L("Bitte zuerst dein eigenes Berufsfenster öffnen.")
     end
     if (IsTradeSkillLinked and IsTradeSkillLinked()) or (IsTradeSkillGuild and IsTradeSkillGuild()) then
-        return nil, "Bitte deine eigenen Rezepte öffnen, keine fremde Berufsliste."
+        return nil, L("Bitte deine eigenen Rezepte öffnen, keine fremde Berufsliste.")
     end
     return {
         profession = profession, count = GetNumTradeSkills, info = GetTradeSkillInfo,
@@ -119,8 +139,8 @@ function GT.Scan()
         end
     end)
     for i = #collapsed, 1, -1 do api.collapse(collapsed[i]) end
-    if not ok then return nil, "Beruf konnte nicht gelesen werden: " .. tostring(failure) end
-    if #recipes == 0 then return nil, "Keine Rezepte gefunden. Bitte Berufsfilter zurücksetzen." end
+    if not ok then return nil, L("Beruf konnte nicht gelesen werden: ") .. tostring(failure) end
+    if #recipes == 0 then return nil, L("Keine Rezepte gefunden. Bitte Berufsfilter zurücksetzen.") end
     GT.Enrich(recipes)
     return recipes
 end

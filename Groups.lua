@@ -1,48 +1,49 @@
 local _, GT = ...
+local L = GT.L
 
 -- These are name families, not claims that the items grant a set bonus.
 local families = {
-    {"Traumzwirn", "traumzwirn", "dreamweave"},
-    {"Mondstoff", "mondstoff", "mooncloth"},
-    {"Runenstoff", "runenstoff", "runecloth"},
-    {"Magiestoff", "magiestoff", "mageweave"},
-    {"Schattenzwirn", "schattenzwirn", "shadoweave"},
+    {L("Traumzwirn"), "traumzwirn", "dreamweave"},
+    {L("Mondstoff"), "mondstoff", "mooncloth"},
+    {L("Runenstoff"), "runenstoff", "runecloth"},
+    {L("Magiestoff"), "magiestoff", "mageweave"},
+    {L("Schattenzwirn"), "schattenzwirn", "shadoweave"},
 }
 
 function GT.GroupFor(recipe)
-    if recipe.isEnchant then return 70, "Verzauberungen" end
-    if recipe.classID == 1 or recipe.equipLoc == "INVTYPE_BAG" then return 10, "Taschen" end
+    if recipe.isEnchant then return 70, L("Verzauberungen") end
+    if recipe.classID == 1 or recipe.equipLoc == "INVTYPE_BAG" then return 10, L("Taschen") end
     if recipe.classID == 4 then
         if recipe.equipLoc == "INVTYPE_BODY" or recipe.equipLoc == "INVTYPE_TABARD" then
-            return 90, "Hemden & Kosmetik"
+            return 90, L("Hemden & Kosmetik")
         end
         if recipe.setName or (recipe.setID and recipe.setID > 0) then
-            return 20, "Rüstungssets · " .. (recipe.setName or ("Set " .. recipe.setID))
+            return 20, L("Rüstungssets · ") .. (recipe.setName or ("Set " .. recipe.setID))
         end
         local name = (recipe.itemName or recipe.name):lower()
         for _, family in ipairs(families) do
             for i = 2, #family do
-                if name:find(family[i], 1, true) then return 25, "Rüstungsserien · " .. family[1] end
+                if name:find(family[i], 1, true) then return 25, L("Rüstungsserien · ") .. family[1] end
             end
         end
-        return 30, "Weitere Rüstung & Schmuck"
+        return 30, L("Weitere Rüstung & Schmuck")
     end
-    if recipe.classID == 2 then return 40, "Waffen" end
+    if recipe.classID == 2 then return 40, L("Waffen") end
     if recipe.classID == 0 then
-        if recipe.professionSpellID == 2550 then return 50, "Essen & Getränke" end
-        if recipe.professionSpellID == 3273 then return 50, "Verbände & Erste Hilfe" end
-        if recipe.professionSpellID == 2259 then return 50, "Tränke, Elixiere & Verbrauch" end
-        return 50, "Verbrauchsgegenstände"
+        if recipe.professionSpellID == 2550 then return 50, L("Essen & Getränke") end
+        if recipe.professionSpellID == 3273 then return 50, L("Verbände & Erste Hilfe") end
+        if recipe.professionSpellID == 2259 then return 50, L("Tränke, Elixiere & Verbrauch") end
+        return 50, L("Verbrauchsgegenstände")
     end
-    if recipe.classID == 3 then return 60, "Edelsteine" end
-    if recipe.classID == 6 then return 65, "Munition" end
+    if recipe.classID == 3 then return 60, L("Edelsteine") end
+    if recipe.classID == 6 then return 65, L("Munition") end
     if recipe.classID == 7 then
         if recipe.professionSpellID == 4036 and (recipe.subclassID == 2 or recipe.subclassID == 3) then
-            return 65, "Geräte & Sprengstoffe"
+            return 65, L("Geräte & Sprengstoffe")
         end
-        return 80, "Materialien & Bauteile"
+        return 80, L("Materialien & Bauteile")
     end
-    return 99, "Sonstige Rezepte"
+    return 99, L("Sonstige Rezepte")
 end
 
 function GT.GroupRecipes(recipes)

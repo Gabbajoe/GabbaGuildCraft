@@ -1,6 +1,8 @@
 local _, GT = ...
+local L = GT.L
 local window, recipes, pages, page = nil, {}, {}, 1
 local generation = 0
+local loading = false
 
 local function button(parent, text, width, x, y, callback)
     local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
@@ -15,7 +17,7 @@ local function showPage()
     window.output:SetText(pages[page] or "")
     window.output:SetCursorPosition(0)
     window.scroll:SetVerticalScroll(0)
-    window.counter:SetText(#pages > 0 and ("Nachricht " .. page .. " / " .. #pages) or "Keine Nachricht")
+    window.counter:SetText(#pages > 0 and (L("Nachricht ") .. page .. L(" / ") .. #pages) or L("Keine Nachricht"))
     window.previous:SetEnabled(page > 1)
     window.next:SetEnabled(page < #pages)
 end
@@ -25,33 +27,44 @@ local function exportOptions()
     return {
         query = window.search:GetText(), links = window.links:GetChecked(),
         relevantOnly = window.relevant:GetChecked(), minimumLevel = window.minimum:GetText(),
+        includeMaterials = window.materials and window.materials:GetChecked(),
         player = UnitName("player") .. "-" .. GetRealmName(),
         prefix = interface >= 20000 and "tbc" or "classic",
-        exportedAt = date and date("%d.%m.%Y %H:%M") or "unbekannt",
+        exportedAt = date and date("%d.%m.%Y %H:%M") or L("unbekannt"),
     }
 end
 
 local function render()
     if not window.output then return end
     if window.reload then window.reload:Disable() end
-    local count, pending
-    pages, count, pending = GT.BuildPages(recipes, exportOptions())
+    local count
+    pages, count = GT.BuildPages(recipes, exportOptions())
+    local missing = GT.PendingForExport(recipes, exportOptions())
     page = 1
-    showPage()
-    window.status:SetText((recipes.profession or "Beruf") .. ": " .. count .. " passende Rezepte · " .. #recipes .. " eingelesen")
-    if pending > 0 then
-        window.status:SetText(count .. " passende Rezepte · " .. pending .. " ohne Itemdaten ausgeblendet; erneut einlesen")
+    if #missing > 0 then
+        pages = {L("Fehlende Daten") .. "\n\n" .. table.concat(missing, "\n")}
+        window.status:SetText(L(loading and "Daten werden nachgeladen · %d Rezepte noch unvollständig"
+            or "%d Rezepte unvollständig · Details unten · erneut einlesen", #missing))
+    elseif count == 0 then
+        window.status:SetText(L("Keine passenden Rezepte. Bitte Filter prüfen."))
+    else
+        window.status:SetText(L("%d Rezepte eingelesen · %d für den Export bereit", #recipes, count))
     end
+    showPage()
+    if window.save then window.save:SetEnabled(not loading and #missing == 0 and count > 0) end
+    if window.copy then window.copy:SetEnabled(not loading and #missing == 0 and count > 0) end
+    return #missing
 end
 
 local function scan()
     window.reload:Disable()
     generation = generation + 1
     local current = generation
+    loading = false
     local result, err = GT.Scan()
     if not result then
-        recipes, pages, page = {}, {}, 1
-        showPage()
+        recipes = {}
+        render()
         window.status:SetText(err)
         return
     end
@@ -59,19 +72,18 @@ local function scan()
     local attempts = 0
     local function refresh()
         if current ~= generation then return end
-        local pending = GT.Enrich(recipes)
+        attempts = attempts + 1
+        GT.Enrich(recipes)
+        local missing = GT.PendingForExport(recipes, exportOptions())
+        loading = #missing > 0 and attempts < 21
         render()
-        if pending > 0 then
-            attempts = attempts + 1
-            window.status:SetText(attempts < 8 and "Gegenstandsdaten werden geladen …"
-                or "Einige Daten fehlen noch. Bitte erneut einlesen.")
-            if attempts < 8 then C_Timer.After(0.5, refresh) end
-        end
+        if loading then C_Timer.After(1, refresh) end
     end
     refresh()
 end
 
 local function createWindow()
+    GabbaGuildCraftDB = GabbaGuildCraftDB or {}
     window = CreateFrame("Frame", "GabbaGuildCraftWindow", UIParent, "BackdropTemplate")
     window:SetSize(740, 620)
     window:SetPoint("CENTER")
@@ -88,13 +100,13 @@ local function createWindow()
     tinsert(UISpecialFrames, "GabbaGuildCraftWindow")
     local title = window:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 22, -20)
-    title:SetText("GabbaGuildCraft | Berufe für deine Gilde")
+    title:SetText(L("GabbaGuildCraft | Berufe für deine Gilde"))
     local close = CreateFrame("Button", nil, window, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", -4, -4)
     local help = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     help:SetPoint("TOPLEFT", 22, -50)
-    help:SetText("Beruf öffnen > Berufsfilter zurücksetzen > Rezepte einlesen > Text kopieren")
-    button(window, "Rezepte einlesen", 145, 22, -78, scan)
+    help:SetText(L("1. Beruf öffnen  >  2. Rezepte einlesen  >  3. Export speichern"))
+    button(window, L("Rezepte einlesen"), 145, 22, -78, scan)
     window.search = CreateFrame("EditBox", nil, window, "InputBoxTemplate")
     window.search:SetSize(210, 26)
     window.search:SetPoint("TOPLEFT", 225, -78)
@@ -104,20 +116,20 @@ local function createWindow()
     window.search:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     local label = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     label:SetPoint("RIGHT", window.search, "LEFT", -10, 0)
-    label:SetText("Suche")
+    label:SetText(L("Suche"))
     window.links = CreateFrame("CheckButton", "GabbaGuildCraftLinks", window, "UICheckButtonTemplate")
     window.links:SetPoint("TOPLEFT", 465, -78)
-    window.links.text:SetText("Wowhead-Links")
+    window.links.text:SetText(L("Wowhead-Links"))
     window.links:SetChecked(true)
     window.links:SetScript("OnClick", render)
     window.relevant = CreateFrame("CheckButton", "GabbaGuildCraftRelevant", window, "UICheckButtonTemplate")
     window.relevant:SetPoint("TOPLEFT", 20, -112)
-    window.relevant.text:SetText("Nur relevante Items")
+    window.relevant.text:SetText(L("Nur relevante Items"))
     window.relevant:SetChecked(true)
     window.relevant:SetScript("OnClick", render)
     local minimumLabel = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     minimumLabel:SetPoint("TOPLEFT", 230, -121)
-    minimumLabel:SetText("Ausrüstung ab Level:")
+    minimumLabel:SetText(L("Ausrüstung ab Level:"))
     window.minimum = CreateFrame("EditBox", nil, window, "InputBoxTemplate")
     window.minimum:SetSize(40, 24)
     window.minimum:SetPoint("TOPLEFT", 365, -115)
@@ -129,14 +141,22 @@ local function createWindow()
     window.minimum:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     local filterHelp = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     filterHelp:SetPoint("TOPLEFT", 435, -121)
-    filterHelp:SetText("Taschen, Verbrauch & Verzauberungen")
+    filterHelp:SetText(L("Taschen, Verbrauch & Verzauberungen"))
+    window.materials = CreateFrame("CheckButton", "GabbaGuildCraftMaterials", window, "UICheckButtonTemplate")
+    window.materials:SetPoint("TOPLEFT", 20, -141)
+    window.materials.text:SetText(L("Materialien & Transmutationen anzeigen"))
+    window.materials:SetChecked(GabbaGuildCraftDB.includeMaterials ~= false)
+    window.materials:SetScript("OnClick", function()
+        GabbaGuildCraftDB.includeMaterials = not not window.materials:GetChecked()
+        render()
+    end)
     window.status = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    window.status:SetPoint("TOPLEFT", 22, -153)
+    window.status:SetPoint("TOPLEFT", 22, -180)
     window.status:SetWidth(695)
     window.status:SetJustifyH("LEFT")
 
     window.scroll = CreateFrame("ScrollFrame", nil, window, "UIPanelScrollFrameTemplate")
-    window.scroll:SetPoint("TOPLEFT", 24, -181)
+    window.scroll:SetPoint("TOPLEFT", 24, -212)
     window.scroll:SetPoint("BOTTOMRIGHT", -44, 127)
     window.output = CreateFrame("EditBox", nil, window.scroll)
     window.output:SetMultiLine(true)
@@ -148,16 +168,20 @@ local function createWindow()
     window.output:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     window.scroll:SetScrollChild(window.output)
 
-    window.previous = button(window, "Zurück", 105, 22, -503, function() page = page - 1; showPage() end)
-    window.next = button(window, "Weiter", 105, 135, -503, function() page = page + 1; showPage() end)
-    button(window, "HTML speichern", 135, 420, -541, function()
+    window.previous = button(window, L("Zurück"), 105, 22, -503, function() page = page - 1; showPage() end)
+    window.next = button(window, L("Weiter"), 105, 135, -503, function() page = page + 1; showPage() end)
+    window.save = button(window, L("Export speichern"), 135, 420, -541, function()
+        if loading or #GT.PendingForExport(recipes, exportOptions()) > 0 then
+            window.status:SetText(L("Export noch nicht bereit. Bitte fehlende Daten nachladen."))
+            return
+        end
         local count, err = GT.SaveHTML(recipes, exportOptions())
         window.reload:SetEnabled(count ~= nil and count ~= false)
-        window.status:SetText(count and (count .. " Rezepte vorbereitet. Jetzt »Neu laden« und danach GabbaGuildCraft.lua hochladen.") or err)
+        window.status:SetText(count and (L("%d Rezepte vorbereitet. Jetzt /reload; danach GabbaGuildCraft.lua hochladen.", count)) or err)
     end)
-    window.reload = button(window, "Neu laden", 150, 565, -541, function()
+    window.reload = button(window, L("Jetzt /reload"), 150, 565, -541, function()
         if InCombatLockdown() then
-            window.status:SetText("Bitte den Kampf abwarten und anschließend »Neu laden« klicken.")
+            window.status:SetText(L("Bitte den Kampf abwarten und anschließend »Jetzt /reload« klicken."))
             return
         end
         ReloadUI()
@@ -165,21 +189,23 @@ local function createWindow()
     window.reload:Disable()
     window.reload:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText("Export auf die Festplatte schreiben")
-        GameTooltip:AddLine("Zuerst HTML speichern. Danach lädt WoW die Oberfläche neu", 1, 1, 1)
-        GameTooltip:AddLine("und schreibt die Exportdatei in SavedVariables.", 1, 1, 1)
+        GameTooltip:SetText(L("Export auf die Festplatte schreiben"))
+        GameTooltip:AddLine(L("Zuerst Export speichern. Danach lädt WoW die Oberfläche neu"), 1, 1, 1)
+        GameTooltip:AddLine(L("und schreibt die Exportdatei in SavedVariables."), 1, 1, 1)
         GameTooltip:Show()
     end)
     window.reload:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    button(window, "Text markieren", 150, 565, -503, function()
+    window.copy = button(window, L("Text markieren"), 150, 565, -503, function()
         window.output:SetFocus(); window.output:HighlightText()
     end)
     window.counter = window:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     window.counter:SetPoint("TOPLEFT", 265, -510)
     local copyHelp = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     copyHelp:SetPoint("BOTTOMLEFT", 22, 22)
-    copyHelp:SetText("Discord: Text markieren > Strg+C. Webseite: HTML speichern > Neu laden > GabbaGuildCraft.lua hochladen.")
-    window.status:SetText("Öffne deinen Beruf und klicke auf »Rezepte einlesen«.")
+    copyHelp:SetText(L("Webseite: Export speichern > Jetzt /reload > GabbaGuildCraft.lua hochladen.\nDiscord: Text markieren > Strg+C."))
+    window.save:Disable()
+    window.copy:Disable()
+    window.status:SetText(L("Öffne deinen Beruf und klicke auf »Rezepte einlesen«."))
     showPage()
 end
 
