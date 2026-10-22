@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.2 — 2026-10-22
+
+- Accept name-only tooltips for crafting materials, including alchemy dyes and transmutation outputs, so they no longer block export as missing stats. Empty or mismatched tooltips and incomplete equipment, consumable, device and explosive tooltips still require loading.
+
 ## 1.8.1 — 2026-10-18
 
 - Correct supported clients to WoW Classic Hardcore (Classic Era 1.15.9). Burning Crusade Classic 2.5.6 was listed by mistake and is not supported.

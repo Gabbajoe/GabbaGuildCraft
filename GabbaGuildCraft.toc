@@ -3,7 +3,7 @@
 ## Notes: Share learned profession recipes, reagents and effects with your guild.
 ## Notes-deDE: Gelernte Berufsrezepte mit Zutaten, Werten und Effekten für deine Gilde.
 ## Author: Nils
-## Version: 1.8.1
+## Version: 1.8.2
 ## SavedVariables: GabbaGuildCraftDB, GuildTailorHTML, GuildTailorHTMLTailor, GuildTailorHTMLEngineering
 ## Category-deDE: Berufe
 ## IconTexture: Interface\AddOns\GabbaGuildCraft\Assets\Minimap

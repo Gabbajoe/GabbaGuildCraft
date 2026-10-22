@@ -23,7 +23,7 @@ class ReleaseTests(unittest.TestCase):
                 shutil.copy2(ROOT / name, dest)
             (root / '.env').write_text('MUST_NOT_BE_PACKAGED')
             (root / 'personal.lua').write_text('MUST_NOT_BE_PACKAGED')
-            v, first, checksum, count = build.build(root, Path(tmp) / 'first', 'v1.8.1')
+            v, first, checksum, count = build.build(root, Path(tmp) / 'first', 'v' + build.version(ROOT))
             _, second, _, _ = build.build(root, Path(tmp) / 'second')
             self.assertEqual(first.read_bytes(), second.read_bytes())
             self.assertEqual(checksum.read_text().split()[0], hashlib.sha256(first.read_bytes()).hexdigest())
@@ -39,13 +39,13 @@ class ReleaseTests(unittest.TestCase):
 
     def test_client_versions_and_metadata(self):
         versions = [{'name': '1.15.9', 'id': 101}, {'name': '2.5.6', 'id': 202}]
-        data = upload.metadata(ROOT, 'v1.8.1', 'Changes', versions)
+        data = upload.metadata(ROOT, 'v' + build.version(ROOT), 'Changes', versions)
         self.assertEqual(data['gameVersions'], [101])
         self.assertEqual(data['releaseType'], 'release')
         self.assertEqual(data['changelog'], 'Changes')
         for invalid in [versions[1:], versions + versions[:1], [{'name': '1.15.9', 'id': 'bad'}]]:
             with self.assertRaises(ValueError):
-                upload.metadata(ROOT, 'v1.8.1', '', invalid)
+                upload.metadata(ROOT, 'v' + build.version(ROOT), '', invalid)
         with self.assertRaises(ValueError):
             upload.metadata(ROOT, 'v1.6.0', '', versions)
 

@@ -21,7 +21,7 @@ Die Oberfläche und Exporttexte folgen der WoW-Sprache: Deutsch bei deDE, sonst 
 
 ## Installation
 
-1. Lade **GabbaGuildCraft-1.8.1.zip** unter [Releases](https://github.com/Gabbajoe/GabbaGuildCraft/releases/latest) herunter. Verwende das fertige Addon-ZIP, nicht GitHubs „Source code“.
+1. Lade **GabbaGuildCraft-1.8.2.zip** unter [Releases](https://github.com/Gabbajoe/GabbaGuildCraft/releases/latest) herunter. Verwende das fertige Addon-ZIP, nicht GitHubs „Source code“.
 2. Beende WoW und entpacke die ZIP-Datei.
 3. Kopiere den enthaltenen Ordner **GabbaGuildCraft** in `Interface/AddOns` deiner Spielinstallation. Für Classic Era zum Beispiel:
 
@@ -72,7 +72,7 @@ Beim Umstieg vom alten GuildTailor das Spiel beenden und den alten Addon-Ordner 
 ```sh
 LUA=lua5.1 LUAC=luac5.1 bash tests/run_tests.sh
 python3 -m unittest discover -s tests -p 'test_*.py'
-python3 tools/build_package.py --output-dir dist --tag v1.8.1
+python3 tools/build_package.py --output-dir dist --tag v1.8.2
 ```
 
 Die Pipeline prüft Lua und Exportverhalten und baut ein reproduzierbares ZIP mit SHA-256-Prüfsumme. Ein Versions-Tag erzeugt einen GitHub-Release; ein eingerichtetes CurseForge-Projekt erhält dasselbe Paket. Einrichtung und Veröffentlichung: **[RELEASING.md](RELEASING.md)**. Projektbeschreibung und Logo: **[curseforge/SETUP.md](curseforge/SETUP.md)**.

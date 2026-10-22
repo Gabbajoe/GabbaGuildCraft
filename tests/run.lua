@@ -214,6 +214,29 @@ local cleanEffects = GT.TooltipEffects({{'Bag'}, {'Binds when equipped'}, {'18 S
 assert(#cleanEffects == 3)
 assert(cleanEffects[2] == '18 Slot Bag' and cleanEffects[3] == '+4 Intellect')
 
+-- Materials/transmutation outputs may have a title-only tooltip.
+for _, name in ipairs({"Geisterfarbstoff", "Arkanitbarren", "Echtsilberbarren", "Goldbarren"}) do
+    tooltipRows = {{name}}
+    local material = {name = name, itemID = 123, link = "item:123", itemName = name,
+        classID = 7, subclassID = 0, reagents = {}}
+    assert(GT.ReadEffects(material))
+    assert(material.effectsLoaded and #material.effects == 0)
+end
+for _, class in ipairs({{0, 0}, {4, 1}, {7, 2}, {7, 3}}) do
+    tooltipRows = {{"Testgegenstand"}}
+    assert(not GT.ReadEffects({itemID = 123, link = "item:123", itemName = "Testgegenstand",
+        classID = class[1], subclassID = class[2]}))
+end
+local unloadedMaterial = {itemID = 123, link = "item:123", itemName = "Arkanitbarren", classID = 7}
+tooltipRows = {}
+assert(not GT.ReadEffects(unloadedMaterial))
+tooltipRows = {{"Daten werden geladen"}}
+assert(not GT.ReadEffects(unloadedMaterial))
+assert(not unloadedMaterial.effectsLoaded)
+tooltipRows = {{"Arkanitbarren"}, {"Zusätzliche Materialangabe"}}
+assert(GT.ReadEffects(unloadedMaterial))
+contains(table.concat(unloadedMaterial.effects), "Zusätzliche Materialangabe")
+
 -- Classic enchanting uses Craft APIs and has no item level or output item.
 GT.activeMode = "craft"
 GetCraftDisplaySkillLine = function() return "Verzauberkunst" end

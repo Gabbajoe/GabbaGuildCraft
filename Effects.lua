@@ -63,7 +63,12 @@ function GT.ReadEffects(recipe)
         end
     end
     tooltip:Hide()
-    if #rows < 2 then return false end
+    -- Plain crafting materials can have only a name (the sell price is a
+    -- separate money frame). Devices and explosives still need their effects.
+    local material = recipe.classID == 7 and recipe.subclassID ~= 2 and recipe.subclassID ~= 3
+    local namedMaterial = material and recipe.itemID and recipe.itemName
+        and #rows == 1 and plain(rows[1][1]) == recipe.itemName
+    if #rows < 2 and not namedMaterial then return false end
     recipe.effects = GT.TooltipEffects(rows, recipe)
     recipe.effectsLoaded = true
     return true
